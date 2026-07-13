@@ -26,11 +26,20 @@ class VectorStore:
     def get_file_meta(self, filepath: str):
         """Checks if a file is already indexed and up-to-date."""
         try:
-            results = self.table.search().where(f"filepath = '{filepath}'", select=["mtime", "size"]).limit(1).to_list()
+            # LanceDB 0.34.0 API: search() with where() and select() chained
+            results = (
+                self.table
+                .search()
+                .where(f"filepath = '{filepath}'")
+                .select(["mtime", "size"])
+                .limit(1)
+                .to_list()
+            )
             if results:
                 return results[0]["mtime"], results[0]["size"]
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Vina] get_file_meta error: {e}")
+            
         return None, None
 
     def delete_file_chunks(self, filepath: str):
