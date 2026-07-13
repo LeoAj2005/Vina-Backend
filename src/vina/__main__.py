@@ -16,5 +16,8 @@ def main():
         print("No results found.")
         return
 
-    for i, r in enumerate(results, 1):
-        print(i, r["filepath"], r["score"])
+    for i, res in enumerate(results, 1):
+        print(f"{i}. {res['filepath']}")
+        print(f"Distance: {res['score']:.4f}")
+        print(f"Excerpt: {res['text'][:150]}...")
+        print()

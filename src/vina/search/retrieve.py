@@ -16,7 +16,18 @@ def search_files(query: str, limit: int = 10) -> list[dict]:
     
     # 2. Search LanceDB
     # We request more results than 'limit' because we need to collapse chunks into files
-    results = store.table.search(query_vector).limit(limit * 4).to_list()
+    results = (
+        store.table
+        .search(query_vector)
+        .select([
+            "filepath",
+            "text",
+            "chunk_index",
+            "_distance"
+        ])
+        .limit(limit * 4)
+        .to_list()
+    )
     
     if not results:
         return []
