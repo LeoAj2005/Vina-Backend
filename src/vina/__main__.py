@@ -1,10 +1,20 @@
-# src/vina/__main__.py
 from .indexer.runner import run_indexer
+from .search.retrieve import search_files
 
 def main():
-    # For Phase 1 & 2, we run the indexer. 
-    # Later, we'll use argparse here to switch between 'vina index' and 'vina serve'
     run_indexer()
 
-if __name__ == "__main__":
-    main()
+    print("\n" + "="*50)
+    print("[Vina] Phase 2: Search Engine Test")
+    print("="*50)
+
+    test_query = "algorithms"
+
+    results = search_files(test_query, limit=3)
+
+    if not results:
+        print("No results found.")
+        return
+
+    for i, r in enumerate(results, 1):
+        print(i, r["filepath"], r["score"])

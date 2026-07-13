@@ -32,13 +32,6 @@ def run_indexer():
                 
                 db_mtime, db_size = store.get_file_meta(filepath)
                 
-                # --- DIAGNOSTIC PRINTS ---
-                print(f"\n--- Checking: {filepath} ---")
-                print(f"DB:   mtime={db_mtime}, size={db_size}")
-                print(f"FS:   mtime={current_mtime}, size={current_size}")
-                print("-" * 40)
-                # -------------------------
-                
                 if db_mtime == current_mtime and db_size == current_size:
                     files_skipped += 1
                     continue
