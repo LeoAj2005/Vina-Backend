@@ -1,22 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 # Aggressively collect data, binaries, and submodules for our native/heavy deps
 datas = []
 binaries = []
 hiddenimports = []
 
-for pkg in ['lancedb', 'pyarrow', 'fastembed', 'onnxruntime', 'tokenizers']:
+for pkg in ['lancedb', 'pyarrow', 'fastembed', 'onnxruntime', 'tokenizers', 'uvicorn', 'uvicorn.logging', 'uvicorn.protocols', 'uvicorn.protocols.http', 'uvicorn.protocols.http.auto', 'uvicorn.protocols.websockets', 'uvicorn.protocols.websockets.auto', 'uvicorn.lifespan', 'uvicorn.lifespan.on']:
     d, b, h = collect_all(pkg)
     datas += d
     binaries += b
     hiddenimports += h
 
+# FastAPI/Pydantic also have hidden imports sometimes
+hiddenimports += collect_submodules('fastapi')
+hiddenimports += collect_submodules('pydantic')
+
 block_cipher = None
 
 a = Analysis(
-    ['src/vina/__main__.py'],  # Points to the src layout
-    pathex=[],
+    ['vina_launcher.py'],
+    pathex=['src'],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
