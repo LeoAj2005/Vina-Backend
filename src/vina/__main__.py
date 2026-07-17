@@ -1,54 +1,72 @@
-import threading
-import uvicorn
 import logging
-from .config import get_config, get_or_create_token, APP_DIR, setup_logging
+import sys
+from pathlib import Path
+
+import uvicorn
+
+from .config import APP_DIR, get_config, get_or_create_token, setup_logging
 from .indexer.runner import run_indexer
-from .indexer.watcher import start_watcher
+# Leveraging the context manager architecture built in step 1
+from .indexer.watcher import file_watcher_scope
 from .server import app  # Static import ensures PyInstaller traces & bundles this module directly
 
-def main():
-    # 1. Setup Framework Logging
+
+def main() -> None:
+    """
+    Application entrypoint orchestrating initialization, synchronous baseline indexing,
+    asynchronous file-system monitoring, and the core HTTP network layer.
+    """
+    # 1. Setup Structured Framework Logging
     logger = setup_logging()
-    logger.info(f"Initializing Vina Engine Core Services")
-    logger.info(f"Local App Configuration Repository Location: {APP_DIR}")
+    logger.info("Initializing Vina Engine Core Services")
+    logger.info("Local App Configuration Repository Location: %s", APP_DIR)
     
     try:
-        # 2. Extract Configuration Values
+        # 2. Extract and Validate Configuration Parameters
         config = get_config()
-        target_folder = config["target_folder"]
-        port = config["port"]
-        host = config["host"]
         
-        # Ensure security key is generated
+        # Defensive validation for configuration keys
+        try:
+            target_folder = str(config["target_folder"])
+            host = str(config["host"])
+            port = int(config["port"])
+        except KeyError as err:
+            logger.critical("Missing critical configuration parameter key: %s", err)
+            sys.exit(1)
+        except ValueError as err:
+            logger.critical("Invalid datatype detected within configuration properties: %s", err)
+            sys.exit(1)
+            
+        # Ensure security token initialization takes place early
         _ = get_or_create_token()
         
-        # 3. Execute Directory Baseline Sync
+        # 3. Execute Synchronous Directory Baseline Sync
+        # Catches changes that occurred while the app was shut down
+        logger.info("Executing initial directory indexing baseline sync for: %s", target_folder)
         run_indexer(target_folder)
         
-        # 4. Bind Live Background Watchdog Instance
-        logger.info(f"Spawning live background file tracking daemon thread targeting: {target_folder}")
-        watcher_thread = threading.Thread(
-            target=start_watcher, 
-            args=(target_folder,), 
-            daemon=True
-        )
-        watcher_thread.start()
-        
-        # 5. Hand control off to FastAPI/Uvicorn HTTP Engine Layer
-        logger.info(f"Starting REST API infrastructure server on http://{host}:{port}")
-        
-        # Passing the pre-imported 'app' instance protects the frozen executable build
-        uvicorn.run(
-            app, 
-            host=host, 
-            port=port, 
-            log_level="info"
-        )
-        
-    except Exception as e:
-        # Captures the full traceback automatically and dumps it straight into your vina.log file
-        logger.exception("Fatal error encountered during Vina Core engine startup runtime loop")
-        raise
+        # 4. Bind Live File Watcher and Hand Control to Uvicorn
+        # The context manager controls the lifecycle of the background watchdog thread.
+        # When uvicorn.run blocks, the watcher runs smoothly. When uvicorn exits,
+        # the context manager guarantees the background threads are cleanly drained and closed.
+        with file_watcher_scope(target_folder):
+            logger.info("Starting REST API infrastructure server on http://%s:%d", host, port)
+            
+            uvicorn.run(
+                app, 
+                host=host, 
+                port=port, 
+                log_level="info",
+                interface="asgi"
+            )
+            
+    except SystemExit:
+        # Pass-through for deliberate runtime termination exits
+        pass
+    except Exception:
+        logger.exception("Fatal crash encountered during Vina Core engine startup runtime loop")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
