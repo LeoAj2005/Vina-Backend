@@ -33,9 +33,10 @@ class VectorStore:
     Handles embedding storage, metadata lookups, and programmatic chunk deletions.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, db_path: str | None = None) -> None:
         try:
-            self.db = lancedb.connect(DB_PATH)
+            target_path = db_path or DB_PATH
+            self.db = lancedb.connect(target_path)
             if TABLE_NAME not in self.db.table_names():
                 logger.info("Database table '%s' not found. Materializing new instance with target schema.", TABLE_NAME)
                 self.db.create_table(TABLE_NAME, schema=SCHEMA)
