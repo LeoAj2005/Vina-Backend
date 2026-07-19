@@ -18,7 +18,7 @@ VECTOR_DIMENSION = 384
 # Schema blueprint for our LanceDB vector storage layer.
 # Using explicit fixed_size_list guarantees exact dimension compliance at the database kernel layer.
 SCHEMA = pa.schema([
-    pa.field("vector", pa.fixed_size_list(pa.float32(), VECTOR_DIMENSION)),
+    pa.field("vector", pa.list_(pa.float32(), VECTOR_DIMENSION)),
     pa.field("filepath", pa.string()),
     pa.field("chunk_index", pa.int32()),
     pa.field("text", pa.string()),

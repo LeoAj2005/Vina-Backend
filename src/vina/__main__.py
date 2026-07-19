@@ -10,7 +10,7 @@ from .indexer.runner import run_indexer
 from .indexer.watcher import file_watcher_scope
 from .server import app  # Static import ensures PyInstaller traces & bundles this module directly
 
-
+### Today is World cup  2026 Final.. What a Day to be a Barca Fan. I don't know who to Support...
 def main() -> None:
     """
     Application entrypoint orchestrating initialization, synchronous baseline indexing,

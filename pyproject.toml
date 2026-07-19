@@ -27,3 +27,20 @@ packages = ["src/vina"]
 
 [project.scripts]
 vina = "vina.__main__:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = """
+    --cov=src/vina
+    --cov-branch
+    --cov-report=term-missing
+    --cov-report=html
+    -ra
+"""
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+]

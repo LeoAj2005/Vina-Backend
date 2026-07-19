@@ -56,7 +56,7 @@ def process_file(
             return 0
             
         # 3. Dissect body text into operational chunks
-        chunks = chunk_text(text)
+        chunks = list(chunk_text(text))
         if not chunks:
             logger.debug("Text segmentation split yielded zero chunks for: %s", filepath)
             return 0
