@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.139.0",
     "fastembed>=0.8.0",
     "lancedb>=0.34.0",
+    "llama-cpp-python[server]>=0.3.34",
     "psutil>=7.2.2",
     "pyinstaller>=6.21.0",
     "pypdf>=6.14.2",
